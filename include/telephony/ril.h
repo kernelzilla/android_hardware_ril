@@ -3548,6 +3548,13 @@ void RIL_onUnsolicitedResponse(int unsolResponse, const void *data,
 void RIL_requestTimedCallback (RIL_TimedCallback callback,
                                void *param, const struct timeval *relativeTime);
 
+/**
+ * Remove user-specified callback function
+ *  @param param  parameter list
+ */
+
+void RIL_removeTimedCallback(void *param);
+
 
 #endif /* RIL_SHLIB */
 

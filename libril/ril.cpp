@@ -142,7 +142,6 @@ typedef struct UserCallbackInfo {
     struct UserCallbackInfo *p_next;
 } UserCallbackInfo;
 
-
 /*******************************************************************/
 
 RIL_RadioFunctions s_callbacks = {0, NULL, NULL, NULL, NULL, NULL};
@@ -244,6 +243,9 @@ extern "C" void RIL_onUnsolicitedResponse(int unsolResponse, void *data,
 static UserCallbackInfo * internalRequestTimedCallback
     (RIL_TimedCallback callback, void *param,
         const struct timeval *relativeTime);
+
+static void internalRemoveTimedCallback
+    (void *index);
 
 /** Index == requestNumber */
 static CommandInfo s_commands[] = {
@@ -2916,11 +2918,42 @@ internalRequestTimedCallback (RIL_TimedCallback callback, void *param,
     return p_info;
 }
 
+static void
+internalRemoveTimedCallback(void *ptr)
+{
+    UserCallbackInfo *p_info;
+    struct ril_event *list;
+    struct ril_event *curr_ptr;
+
+    curr_ptr = (struct ril_event *)ril_timer_list();
+    list = curr_ptr->next;
+
+    if(list == NULL) {
+        return;
+    }
+
+    while(list != curr_ptr) {
+
+        p_info = (UserCallbackInfo *)list->param;
+        list = list->next;
+
+        if((int )(p_info->userParam) == (int)ptr) {
+            ril_timer_delete(&(p_info->event));
+            free(p_info);
+            break;
+        }
+    }
+}
 
 extern "C" void
 RIL_requestTimedCallback (RIL_TimedCallback callback, void *param,
                                 const struct timeval *relativeTime) {
     internalRequestTimedCallback (callback, param, relativeTime);
+}
+
+extern "C" void
+RIL_removeTimedCallback ( void *token_id) {
+    internalRemoveTimedCallback(token_id);
 }
 
 const char *
